@@ -28,45 +28,18 @@ import { LoginService } from '../../services/login.service';
 
       <button type="button" (click)="registration(name,  password)">Registration</button>
       <br/>
-      <button type="button" (click)="test()">Test</button>
-
     </div>
   `,
   styleUrl: './login.component.css'
 })
 export class LoginComponent {
-  name: string = '';
-  password: string = '';
-  response: string = '';
+  name: string = "";
+  password: string = "";
   constructor(private loginService: LoginService){}
-  test() {
-    this.loginService.test();
-  }
   registration(name: string, password: string){
-    console.log(1);
-    this.loginService.registerUser(name, password)
-      .subscribe({
-        next:(data: any) => {
-          console.log(3);
-          console.log(data);
-          this.response=data;
-        },
-        error: error => console.log(error)
-      });
+    this.loginService.postRequest(name, password, "registration");
   }
-  // registrationByMe(name: string, password: string){
-  //   console.log("me");
-  //   this.loginService.registerUserByMe(name, password)
-  //     .subscribe({
-  //       next:(data: any) => {
-  //         console.log("me_2");
-  //         console.log(data);
-  //         this.response=data;
-  //       },
-  //       error: error => console.log(error)
-  //     });
-  // }
   login(name: string, password: string) {
-    console.log("login : " + name + " " + password);
+    this.loginService.postRequest(name, password, "login");
   }
 }

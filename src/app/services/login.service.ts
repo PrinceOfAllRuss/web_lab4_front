@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import {HttpClient, HttpParams} from "@angular/common/http";
+import {HttpClient} from "@angular/common/http";
 
 @Injectable({
   providedIn: 'root'
@@ -7,23 +7,22 @@ import {HttpClient, HttpParams} from "@angular/common/http";
 export class LoginService {
   url: string = 'http://localhost:8080';
   constructor(private http: HttpClient) {}
-  registerUser(name: string, password: string) {
-    const prefix: string = "/register_user"
+  postRequest(name: string, password: string, action: string) {
+    let prefix: string;
     const user = {name: name, password: password};
-    return this.http.post(this.url + prefix, {data: user}, {responseType: 'text'});
-  }
-
-  // registerUserByMe(name: string, password: string) {
-  //   const prefix: string = "/register_user_by_me"
-  //   const user = {name: name, password: password};
-  //   return this.http.post(this.url + prefix, {data: user}, {responseType: 'text'});
-  // }
-  test() {
-    console.log("test");
-    this.http.get('http://localhost:8080/test', {responseType: 'text'}).subscribe((data: any) => {
-      console.log('!');
-      console.log(data);
-      console.log("test end");
-    })
+    if (action == "login") {
+      prefix = "/login_user";
+    } else {
+      prefix = "/register_user";
+    }
+    this.http.post(this.url + prefix, {data: user}, {responseType: 'json'})
+      .subscribe({
+        next:(data: any) => {
+          console.log(data);
+          console.log(data.token);
+          sessionStorage.setItem("token", data.token);
+        },
+        error: error => console.log(error)
+      });
   }
 }

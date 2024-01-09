@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import {AfterViewInit, Component} from '@angular/core';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import { HttpClientModule } from "@angular/common/http";
 import { LoginService } from '../../services/login.service';
@@ -32,14 +32,19 @@ import { LoginService } from '../../services/login.service';
   `,
   styleUrl: './login.component.css'
 })
-export class LoginComponent {
-  name: string = "";
-  password: string = "";
+export class LoginComponent implements AfterViewInit {
+  name: string = "Fedor";
+  password: string = "1234";
   constructor(private loginService: LoginService){}
+  ngAfterViewInit() {
+    sessionStorage.setItem('token', '');
+    sessionStorage.setItem('results', '[]');
+  }
+
   registration(name: string, password: string){
-    this.loginService.postRequest(name, password, "registration");
+    this.loginService.loginRequest(name, password, "registration");
   }
   login(name: string, password: string) {
-    this.loginService.postRequest(name, password, "login");
+    this.loginService.loginRequest(name, password, "login");
   }
 }

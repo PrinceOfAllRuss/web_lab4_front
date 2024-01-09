@@ -15,7 +15,8 @@ import {Result} from "../../classes/result";
   ],
   template: `
     <div>
-      <canvas #canvas style="border: 1px solid" id="graph" width="500" height="500"></canvas>
+      <canvas #canvas style="border: 1px solid"
+              id="graph" width="500" height="500" (click)="sendPointFromGraph($event)"></canvas>
     </div>
     <div>
       <label for="x">Select X </label>
@@ -31,11 +32,9 @@ import {Result} from "../../classes/result";
         <option value="2">2</option>
       </select>
       <br/>
-
       <label for="y">Select Y (from -3 to 5) </label>
       <input type="text" id="y" #y />
       <br/>
-
       <label for="r">Select R </label>
       <select #r id="r" (change)="changeR()">
         <option value="-2">-2</option>
@@ -49,13 +48,11 @@ import {Result} from "../../classes/result";
         <option value="2" selected>2</option>
       </select>
       <br/>
-      <button (click)="login()" style="color: blue">Login</button>
-      <br/>
       <button (click)="submitForm()">Submit</button>
       <br/>
-      <button (click)="getTableOfResults()">Get table with results</button>
+      <button (click)="exit()">Exit</button>
       <br/>
-      <button (click)="testOne()">Test1</button>
+      <button (click)="test()">Test</button>
     </div>
     <div>
       <table width="100%" border="1">
@@ -67,8 +64,7 @@ import {Result} from "../../classes/result";
             <th>Time of work in milliseconds</th>
             <th>Time</th>
           </tr>
-        <ng-container *ngIf="sessionStorage.getItem('results') !== null ||
-        sessionStorage.getItem('results') !== undefined">
+        <ng-container *ngIf="results !== null || results !== undefined">
           <tr *ngFor="let result of results">
             <td>{{result.x}}</td>
             <td>{{result.y}}</td>
@@ -88,13 +84,14 @@ export class HomeComponent implements AfterViewInit {
   @ViewChild("y", {static: false}) y!: ElementRef;
   @ViewChild("r", {static: false}) r!: ElementRef;
   @ViewChild("canvas", {static: false}) canvas!: ElementRef;
-  results: Result[] = JSON.parse(sessionStorage.getItem('results')!);
-  protected readonly sessionStorage = sessionStorage;
+  // results: Result[] = JSON.parse(sessionStorage.getItem('results')!);
+  results: Result[] = [];
   constructor(private loginService: LoginService,
               private formService: FormService,
               private tableService: TableService) {}
-  ngAfterViewInit() {
+  async ngAfterViewInit() {
     this.drawGraph(this.r.nativeElement.value);
+    console.log(sessionStorage.getItem('results'));
   }
   drawGraph(r: number) {
     const graph: HTMLCanvasElement = this.canvas.nativeElement;
@@ -110,24 +107,76 @@ export class HomeComponent implements AfterViewInit {
     let x: string = this.x.nativeElement.value;
     let y: string = this.y.nativeElement.value;
     let r: string = this.r.nativeElement.value;
-    this.formService.postRequest(x, y, r);
-    let new_result = await this.getTableOfResults();
+    let method: string = 'form';
+    await this.formService.postRequestFetch(x, y, r, method);
+    console.log('results');
+    console.log(this.results);
+    console.log('!');
+    // let new_result = await this.tableService.getAllResults();
+    this.results = await this.tableService.getAllResults();
+    // console.log('new_results');
+    // console.log(new_result);
+    // sessionStorage.setItem('results', JSON.stringify(new_result));
+    // this.results.push(new_result[new_result.length - 1]);
+    this.drawGraph(parseFloat(r));
+    // (await this.formService.postRequest(x, y, r, method)).subscribe({
+    //   next:async (data: any) => {
+    //     console.log(data);
+    //     console.log(data.token);
+    //     console.log('results');
+    //     console.log(this.results);
+    //     console.log('!');
+    //     let new_result = await this.tableService.getAllResults();
+    //     console.log('new_results');
+    //     console.log(new_result);
+    //     sessionStorage.setItem('results', JSON.stringify(new_result));
+    //     this.results.push(new_result[new_result.length - 1]);
+    //     this.drawGraph(parseFloat(r));
+    //   },
+    //   error: error => console.log(error)
+    // });
+  }
+  test() {
+    console.log(sessionStorage.getItem('results'));
+  }
+  async updateTable() {
+    let new_result = await this.tableService.getAllResults();
     sessionStorage.setItem('results', JSON.stringify(new_result));
     console.log(this.results);
     console.log(new_result);
     this.results.push(new_result[new_result.length - 1]);
     console.log('!');
     console.log(this.results);
+    // let new_result = await this.getTableOfResults();
+    // sessionStorage.setItem('results', JSON.stringify(new_result));
+    // console.log(this.results);
+    // console.log(new_result);
+    // this.results.push(new_result[new_result.length - 1]);
+    // console.log('!');
+    // console.log(this.results);
+  }
 
+  async sendPointFromGraph(event: any) {
+    let obj: {coordX: number, coordY: number} = this.getDataFromGraph(event);
+    let r: string = this.r.nativeElement.value;
+    let method: string = 'graph';
+    console.log('(' + obj.coordX + ';' + obj.coordY + ')');
+    this.formService.postRequest(obj.coordX.toString(), obj.coordY.toString(), r, method);
+    await this.updateTable();
   }
-  login() {
-    this.loginService.postRequest("Fedor", "1234", "login");
+
+  getDataFromGraph(event: any) {
+    const graph: HTMLCanvasElement = this.canvas.nativeElement;
+    const context: CanvasRenderingContext2D = this.canvas.nativeElement.getContext('2d');
+    const graphService: GraphService = new GraphService(graph, context);
+    let rect: DOMRect = graph.getBoundingClientRect();
+    let x = event.clientX - rect.left;
+    let y = rect.top - event.clientY;
+    let coordX = (x - graphService.getXAxis()) / graphService.getScaleX();
+    let coordY = (y + graphService.getYAxis()) / graphService.getScaleY();
+    return {coordX: coordX, coordY: coordY};
   }
-  testOne() {
-    this.tableService.getRequestOne();
-    console.log(sessionStorage.getItem('results'));
-  }
-  async getTableOfResults(): Promise<Result[]> {
-    return await this.tableService.getAllResultsFetch();
+  exit() {
+    this.loginService.logoutRequest();
   }
 }

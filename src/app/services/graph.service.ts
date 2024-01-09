@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import {Result} from "../classes/result";
 
 @Injectable({
   providedIn: 'root'
@@ -26,6 +27,18 @@ export class GraphService {
     this.yAxis = Math.round(this.graphHeight / this.scaleY / 2) * this.scaleY;
     this.shiftNumberNames = 3;
     this.shiftAxisNames = 15;
+  }
+  getXAxis() {
+    return this.xAxis;
+  }
+  getYAxis() {
+    return this.yAxis;
+  }
+  getScaleX() {
+    return this.scaleX;
+  }
+  getScaleY() {
+    return this.scaleY;
   }
   drawGraphBackground() {
     this.context.fillStyle = "#ffffff"; //белый цвет для фона
@@ -79,6 +92,31 @@ export class GraphService {
     this.context.stroke();
     this.context.closePath();
   }
+
+  drawPoint(x: number, y: number, condition: boolean) {
+    // console.log('draw point');
+    this.context.beginPath();
+    switch(condition) {
+      case true : this.context.fillStyle = " #34C924";
+        break;
+      case false : this.context.fillStyle = "#f5002d";
+    }
+    this.context.globalAlpha = 1;
+    this.context.arc(this.xAxis + x * this.scaleX,
+      this.yAxis - y * this.scaleY, 3, 0, 2 * Math.PI);
+    this.context.fill();
+    this.context.closePath();
+  }
+
+  drawDotsFromTable(r: number) {
+    let results: Result[] = JSON.parse(sessionStorage.getItem('results')!);
+    for (let i = 0; i < results.length; i++) {
+      if (parseFloat(results[i].r) == r) {
+        this.drawPoint(parseFloat(results[i].x), parseFloat(results[i].y), results[i].condition);
+      }
+    }
+  }
+
   drawGraph(r: number) {
     this.drawGraphBackground();
     if (r === 0) return;
@@ -118,7 +156,7 @@ export class GraphService {
     this.context.fillRect(this.xAxis, this.yAxis, Math.sign(r) * (r_abs * this.scaleX + 1), Math.sign(r) * (r_abs / 2 * this.scaleY));
     this.context.closePath();
 
-    // this.drawDotsFromTable(r);
+    this.drawDotsFromTable(r);
 
     // let clickDot = JSON.parse(window.sessionStorage.getItem("clickDot"));
     // let dotsList = JSON.parse(window.sessionStorage.getItem("allDots"));

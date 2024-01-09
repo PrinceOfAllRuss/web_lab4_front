@@ -9,7 +9,9 @@ import { HomeComponent } from "./components/home/home.component";
   selector: 'app-root',
   standalone: true,
   imports: [CommonModule, RouterOutlet, LoginComponent, HomeComponent],
-  templateUrl: './app.component.html',
+  template: `
+    <router-outlet></router-outlet>
+  `,
   styleUrl: './app.component.css'
 })
 export class AppComponent {

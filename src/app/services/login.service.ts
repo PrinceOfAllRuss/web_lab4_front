@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import {TableService} from "./table.service";
 import {Router} from "@angular/router";
 
 @Injectable({
@@ -8,34 +7,38 @@ import {Router} from "@angular/router";
 export class LoginService {
   url: string = 'http://localhost:8080';
   constructor(private router: Router) {}
-  async loginRequest(name: string, password: string, action: string) {
-    let msg: string = '';
-    let prefix: string;
-    const user = {name: name, password: password, browser: window.navigator.userAgent};
-    if (action == "login") {
-      prefix = "/login_user";
-    } else {
-      prefix = "/register_user";
-    }
+  async postRequest(data: object, prefix: string) {
+    let result_obj: { msg:string, condition:boolean } = {msg: '', condition: false};
     try {
       const response = await fetch(this.url + prefix, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(user),
+        body: JSON.stringify(data),
       });
       const result = await response.json();
       console.log("Success:", result);
       localStorage.setItem('token', result.token);
-      if (!result.condition) {
-        msg = result.msg;
-      }
-      await this.router.navigate(['home']);
+      result_obj.msg = result.msg;
+      result_obj.condition = result.condition;
     } catch (error) {
       console.error("Error:", error);
     }
-    return msg;
+    return result_obj;
+  }
+  async registrationRequest(name: string, password: string) {
+    let prefix: string = '/register_user';
+    const user = {name: name, password: password, browser: window.navigator.userAgent};
+    return await this.postRequest(user, prefix);
+  }
+  async loginRequestTwo(name: string, password: string, secret: string) {
+    let prefix: string = '/login_user';
+    console.log(secret);
+    const user = {name: name, password: password,
+      secret: secret, browser: window.navigator.userAgent};
+    let result: { msg: string, condition: boolean } = await this.postRequest(user, prefix);
+    return result;
   }
   async logoutRequest() {
     let prefix: string = "/logout_user";

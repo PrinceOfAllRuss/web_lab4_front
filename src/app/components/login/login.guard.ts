@@ -1,3 +1,3 @@
-export const homeGuard = () => {
+export const loginGuard = () => {
   return localStorage.getItem('token') != '';
 };

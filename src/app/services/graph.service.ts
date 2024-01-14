@@ -108,8 +108,7 @@ export class GraphService {
     this.context.closePath();
   }
 
-  drawDotsFromTable(r: number) {
-    let results: Result[] = JSON.parse(sessionStorage.getItem('results')!);
+  drawDotsFromTable(r: number, results: Result[]) {
     for (let i = 0; i < results.length; i++) {
       if (parseFloat(results[i].r) == r) {
         this.drawPoint(parseFloat(results[i].x), parseFloat(results[i].y), results[i].condition);
@@ -117,7 +116,7 @@ export class GraphService {
     }
   }
 
-  drawGraph(r: number) {
+  drawGraph(r: number, results: Result[]) {
     this.drawGraphBackground();
     if (r === 0) return;
 
@@ -156,18 +155,6 @@ export class GraphService {
     this.context.fillRect(this.xAxis, this.yAxis, Math.sign(r) * (r_abs * this.scaleX + 1), Math.sign(r) * (r_abs / 2 * this.scaleY));
     this.context.closePath();
 
-    this.drawDotsFromTable(r);
-
-    // let clickDot = JSON.parse(window.sessionStorage.getItem("clickDot"));
-    // let dotsList = JSON.parse(window.sessionStorage.getItem("allDots"));
-
-    // if (clickDot !== null) {
-    //   this.drawPoint(clickDot);
-    // }
-    // if (dotsList !== null) {
-    //   for (let i = 0; i < dotsList.length; i++) {
-    //     this.drawPoint(dotsList[i]);
-    //   }
-    // }
+    this.drawDotsFromTable(r, results);
   }
 }

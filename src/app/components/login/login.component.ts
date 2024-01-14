@@ -1,7 +1,8 @@
-import {AfterViewInit, Component} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, ViewChild} from '@angular/core';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import { HttpClientModule } from "@angular/common/http";
 import { LoginService } from '../../services/login.service';
+import {Router} from "@angular/router";
 
 @Component({
   selector: 'app-login',
@@ -17,17 +18,15 @@ import { LoginService } from '../../services/login.service';
 
       <label for="name">Name: </label>
       <input type="text" id="name" name="name" [(ngModel)]="name"/>
-      <br/>
+      <p #errorName id="error_name" class="error"></p>
 
       <label for="password">Password: </label>
-      <input type="text" id="password" name="password" [(ngModel)]="password"/>
-      <br/>
+      <input type="password" id="password" name="password" [(ngModel)]="password"/>
+      <p #errorPassword id="error_password" class="error"></p>
 
-      <button type="button" (click)="login(name, password)">Login</button>
+      <button type="button" class="button" (click)="login()">Login</button>
       <br/>
-
-      <button type="button" (click)="registration(name,  password)">Registration</button>
-      <br/>
+      <button type="button" class="button" (click)="registration()">Registration</button>
     </div>
   `,
   styleUrl: './login.component.css'
@@ -35,16 +34,50 @@ import { LoginService } from '../../services/login.service';
 export class LoginComponent implements AfterViewInit {
   name: string = "Fedor";
   password: string = "1234";
-  constructor(private loginService: LoginService){}
-  ngAfterViewInit() {
-    sessionStorage.setItem('token', '');
-    sessionStorage.setItem('results', '[]');
+  @ViewChild("errorName", {static: false}) errorName!: ElementRef;
+  @ViewChild("errorPassword", {static: false}) errorPassword!: ElementRef;
+  constructor(private loginService: LoginService, private router: Router){
+    if (localStorage.getItem('token') == undefined || localStorage.getItem('token') == '') {
+      localStorage.setItem('token', '');
+      console.log(1);
+    } else {
+      this.router.navigate(['home']);
+      console.log(2);
+    }
+  }
+  async ngAfterViewInit() {
+    // localStorage.setItem('token', '');
   }
 
-  registration(name: string, password: string){
-    this.loginService.loginRequest(name, password, "registration");
+  async registration() {
+    if (this.checkData()) {
+      this.errorName.nativeElement.innerHTML = '';
+      this.errorPassword.nativeElement.innerHTML = '';
+      this.errorName.nativeElement.innerHTML = await this.loginService
+        .loginRequest(this.name, this.password, "registration");
+    }
   }
-  login(name: string, password: string) {
-    this.loginService.loginRequest(name, password, "login");
+  login() {
+    if (this.checkData()) {
+      this.errorName.nativeElement.innerHTML = '';
+      this.errorPassword.nativeElement.innerHTML = '';
+      this.loginService.loginRequest(this.name, this.password, 'login');
+    }
+  }
+  checkData(): boolean {
+    let condition = true;
+    if (this.name == '') {
+      this.errorName.nativeElement.innerHTML = 'Write name';
+      condition = false;
+    } else {
+      this.errorName.nativeElement.innerHTML = '';
+    }
+    if (this.password == '') {
+      this.errorPassword.nativeElement.innerHTML = 'Write password';
+      condition = false;
+    } else {
+      this.errorPassword.nativeElement.innerHTML = '';
+    }
+    return condition;
   }
 }

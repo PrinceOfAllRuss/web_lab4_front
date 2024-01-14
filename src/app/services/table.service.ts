@@ -15,4 +15,14 @@ export class TableService {
     let data: any = await response.json();
     return data as Result[];
   }
+
+  async subscribeOnTableChanges() {
+    let prefix: string = '/changes';
+    return await fetch(this.url + prefix, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      }
+    });
+  }
 }

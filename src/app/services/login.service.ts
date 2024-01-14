@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import {HttpClient} from "@angular/common/http";
 import {TableService} from "./table.service";
 import {Router} from "@angular/router";
 
@@ -8,42 +7,54 @@ import {Router} from "@angular/router";
 })
 export class LoginService {
   url: string = 'http://localhost:8080';
-  constructor(private http: HttpClient, private tableService: TableService, private router: Router) {}
+  constructor(private router: Router) {}
   async loginRequest(name: string, password: string, action: string) {
+    let msg: string = '';
     let prefix: string;
-    const user = {name: name, password: password};
+    const user = {name: name, password: password, browser: window.navigator.userAgent};
     if (action == "login") {
       prefix = "/login_user";
     } else {
       prefix = "/register_user";
     }
-    this.http.post(this.url + prefix, {data: user}, {responseType: 'json'})
-      .subscribe({
-        next:async (data: any) => {
-          console.log(data);
-          console.log(data.token);
-          sessionStorage.setItem('token', data.token);
-          let new_result = await this.tableService.getAllResults();
-          sessionStorage.setItem('results', JSON.stringify(new_result));
-          await this.router.navigate(['home']);
+    try {
+      const response = await fetch(this.url + prefix, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-        error: error => console.log(error)
+        body: JSON.stringify(user),
       });
+      const result = await response.json();
+      console.log("Success:", result);
+      localStorage.setItem('token', result.token);
+      if (!result.condition) {
+        msg = result.msg;
+      }
+      await this.router.navigate(['home']);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+    return msg;
   }
-
-  logoutRequest() {
+  async logoutRequest() {
     let prefix: string = "/logout_user";
-    let token = sessionStorage.getItem('token')!;
-    this.http.post(this.url + prefix, {data: token}, {responseType: 'json'})
-      .subscribe({
-        next:(data: any) => {
-          console.log(data);
-          console.log(data.token);
-          sessionStorage.setItem('token', data.token);
-          sessionStorage.setItem('results', '[]')
-          this.router.navigate(['login']);
+    let token = localStorage.getItem('token')!;
+    let body = {token: token, browser: window.navigator.userAgent};
+    try {
+      const response = await fetch(this.url + prefix, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-        error: error => console.log(error)
+        body: JSON.stringify(body),
       });
+      const result = await response.json();
+      console.log("Success:", result);
+      localStorage.setItem('token', result.token);
+      await this.router.navigate(['login']);
+    } catch (error) {
+      console.error("Error:", error);
+    }
   }
 }

@@ -143,9 +143,13 @@ export class HomeComponent implements AfterViewInit {
       this.errorY.nativeElement.innerHTML = 'Wrong Y';
     } else {
       this.errorY.nativeElement.innerHTML = '';
-      await this.formService.postRequest(x, y, r, method);
-      this.results = await this.tableService.getAllResults();
-      this.drawGraph(parseFloat(r));
+      let response: {msg: string, condition: boolean, token: string} = await this.formService.postRequest(x, y, r, method);
+      if (response.condition) {
+        this.results = await this.tableService.getAllResults();
+        this.drawGraph(parseFloat(r));
+      } else {
+        this.errorY.nativeElement.innerHTML = 'Wrong Y';
+      }
     }
   }
   async sendPointFromGraph(event: any) {

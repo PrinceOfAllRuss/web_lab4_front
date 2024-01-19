@@ -118,7 +118,6 @@ export class GraphService {
 
   drawGraph(r: number, results: Result[]) {
     this.drawGraphBackground();
-    if (r === 0) return;
 
     let r_abs: number = Math.abs(r);
 
